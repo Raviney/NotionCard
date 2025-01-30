@@ -16,6 +16,8 @@ struct ContentView: View {
     @StateObject private var viewModel = CardViewModel()
     @State private var viewMode: ViewMode = .cards
     @State private var selectedIndex: Int = 0
+    @State private var isScrolling = false
+    @State private var lastTapTime = Date()
     
     var body: some View {
         NavigationView {
@@ -32,24 +34,17 @@ struct ContentView: View {
                                 ForEach(Array(viewModel.items.enumerated()), id: \.element.id) { index, item in
                                     SimpleCardView(item: item)
                                         .tag(index)
+                                        .frame(maxHeight: .infinity)
                                         .simultaneousGesture(
-                                            LongPressGesture(minimumDuration: 0.3)
-                                                .sequenced(before: DragGesture(minimumDistance: 5))
-                                                .onEnded { value in
-                                                    switch value {
-                                                    case .second(true, let drag):
-                                                        if let drag = drag {
-                                                            let verticalTranslation = drag.translation.height
-                                                            let horizontalTranslation = drag.translation.width
-                                                            
-                                                            if abs(horizontalTranslation) < abs(verticalTranslation) && (verticalTranslation > 30) {
-                                                                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                                                                    viewMode = .grid
-                                                                }
-                                                            }
+                                            DragGesture(minimumDistance: 20)
+                                                .onChanged { value in
+                                                    let verticalTranslation = value.translation.height
+                                                    let horizontalTranslation = value.translation.width
+                                                    
+                                                    if abs(horizontalTranslation) < abs(verticalTranslation) && verticalTranslation > 30 {
+                                                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7, blendDuration: 0.2)) {
+                                                            viewMode = .grid
                                                         }
-                                                    default:
-                                                        break
                                                     }
                                                 }
                                         )
@@ -63,36 +58,39 @@ struct ContentView: View {
                                     ForEach(Array(viewModel.items.enumerated()), id: \.element.id) { index, item in
                                         SimpleCardView(item: item)
                                             .onTapGesture {
-                                                selectedIndex = index
-                                                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                                                    viewMode = .cards
+                                                let now = Date()
+                                                if !isScrolling && now.timeIntervalSince(lastTapTime) > 0.3 {
+                                                    lastTapTime = now
+                                                    selectedIndex = index
+                                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.55, blendDuration: 0.25)) {
+                                                        viewMode = .cards
+                                                    }
                                                 }
                                             }
-                                            .simultaneousGesture(
-                                                LongPressGesture(minimumDuration: 0.3)
-                                                    .sequenced(before: DragGesture(minimumDistance: 5))
-                                                    .onEnded { value in
-                                                        switch value {
-                                                        case .second(true, let drag):
-                                                            if let drag = drag {
-                                                                let verticalTranslation = drag.translation.height
-                                                                let horizontalTranslation = drag.translation.width
-                                                                
-                                                                if abs(horizontalTranslation) < abs(verticalTranslation) && (verticalTranslation < -30) {
-                                                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                                                                        viewMode = .cards
-                                                                    }
-                                                                }
-                                                            }
-                                                        default:
-                                                            break
-                                                        }
-                                                    }
-                                            )
                                     }
                                 }
                                 .padding(16)
                             }
+                            .gesture(
+                                DragGesture(minimumDistance: 20)
+                                    .onChanged { _ in
+                                        isScrolling = true
+                                    }
+                                    .onEnded { value in
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                            isScrolling = false
+                                        }
+                                        
+                                        let verticalTranslation = value.translation.height
+                                        let horizontalTranslation = value.translation.width
+                                        
+                                        if abs(horizontalTranslation) < abs(verticalTranslation) && verticalTranslation > 50 {
+                                            withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.3)) {
+                                                viewMode = .cards
+                                            }
+                                        }
+                                    }
+                            )
                         }
                     }
                 }
@@ -128,10 +126,11 @@ struct SimpleCardView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             .padding(32)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             .background(Color(.systemBackground))
             .cornerRadius(20)
             .shadow(color: Color.black.opacity(0.15), radius: 10, x: 0, y: 4)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .padding(.horizontal, 20)
             .padding(.vertical, 10)
         }

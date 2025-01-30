@@ -75,16 +75,16 @@ class NotionService {
     private let databaseId: String
     
     init() {
-        // 从环境变量获取配置
-        self.apiKey = ProcessInfo.processInfo.environment["NOTION_API_KEY"] ?? ""
-        self.databaseId = ProcessInfo.processInfo.environment["NOTION_DATABASE_ID"] ?? ""
+        // 从UserDefaults获取配置
+        self.apiKey = UserDefaults.standard.string(forKey: "NOTION_API_KEY") ?? ""
+        self.databaseId = UserDefaults.standard.string(forKey: "NOTION_DATABASE_ID") ?? ""
         
         // 验证配置
         guard !apiKey.isEmpty else {
-            fatalError("NOTION_API_KEY not found in environment variables")
+            fatalError("NOTION_API_KEY not found in UserDefaults")
         }
         guard !databaseId.isEmpty else {
-            fatalError("NOTION_DATABASE_ID not found in environment variables")
+            fatalError("NOTION_DATABASE_ID not found in UserDefaults")
         }
     }
     

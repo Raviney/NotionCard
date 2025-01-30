@@ -9,9 +9,15 @@ import SwiftUI
 
 @main
 struct NotionCardApp: App {
+    @AppStorage("NOTION_API_KEY") private var apiKey = ""
+    
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            if !apiKey.isEmpty {
+                ContentView()
+            } else {
+                ConfigurationView()
+            }
         }
     }
 }
