@@ -41,7 +41,7 @@ struct ContentView: View {
                                                     let verticalTranslation = value.translation.height
                                                     let horizontalTranslation = value.translation.width
                                                     
-                                                    if abs(horizontalTranslation) < abs(verticalTranslation) && verticalTranslation > 30 {
+                                                    if abs(horizontalTranslation) < abs(verticalTranslation) * 0.5 && verticalTranslation > 50 {
                                                         withAnimation(.spring(response: 0.3, dampingFraction: 0.7, blendDuration: 0.2)) {
                                                             viewMode = .grid
                                                         }
@@ -84,7 +84,7 @@ struct ContentView: View {
                                         let verticalTranslation = value.translation.height
                                         let horizontalTranslation = value.translation.width
                                         
-                                        if abs(horizontalTranslation) < abs(verticalTranslation) && verticalTranslation > 50 {
+                                        if abs(horizontalTranslation) < abs(verticalTranslation) * 0.5 && verticalTranslation > 80 {
                                             withAnimation(.spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.3)) {
                                                 viewMode = .cards
                                             }
